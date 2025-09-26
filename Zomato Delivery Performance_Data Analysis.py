@@ -44,6 +44,10 @@ if "City" in df.columns:
     city_options = st.sidebar.multiselect("Pilih Kota", options=df["City"].unique(), default=df["City"].unique())
     df = df[df["City"].isin(city_options)]
 
+if "Weather_conditions" in df.columns:
+    weather_options = st.sidebar.multiselect("Pilih Cuaca", options=df["Weather_conditions"].unique(), default=df["Weather_conditions"].unique())
+    df = df[df["Weather_conditions"].isin(weather_options)]
+
 if "Order_Date" in df.columns:
     min_date, max_date = df["Order_Date"].min(), df["Order_Date"].max()
     date_range = st.sidebar.date_input("Rentang Tanggal", [min_date, max_date])
