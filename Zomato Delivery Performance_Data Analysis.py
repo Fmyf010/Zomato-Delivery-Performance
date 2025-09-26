@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 
 # ================================
@@ -21,6 +22,20 @@ else:
 # Parsing tanggal
 if "Order_Date" in df.columns:
     df["Order_Date"] = pd.to_datetime(df["Order_Date"], errors="coerce", dayfirst=True)
+
+# Hitung jarak jika ada koordinat
+if {"Restaurant_latitude", "Restaurant_longitude", "Delivery_location_latitude", "Delivery_location_longitude"}.issubset(df.columns):
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 6371  # Earth radius in km
+        lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = np.sin(dlat/2.0)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2.0)**2
+        c = 2 * np.arcsin(np.sqrt(a))
+        return R * c
+
+    df["Distance_km"] = haversine(df["Restaurant_latitude"], df["Restaurant_longitude"],
+                                   df["Delivery_location_latitude"], df["Delivery_location_longitude"])
 
 # Sidebar Filters
 st.sidebar.header("Filters")
@@ -48,7 +63,10 @@ with col3:
     if "Time_taken (min)" in df.columns:
         st.metric("Rata-rata Waktu Antar (menit)", round(df["Time_taken (min)"].mean(), 2))
 with col4:
-    st.metric("Unique Cities", df["City"].nunique() if "City" in df.columns else "-")
+    if "Distance_km" in df.columns:
+        st.metric("Rata-rata Jarak (km)", round(df["Distance_km"].mean(), 2))
+    else:
+        st.metric("Rata-rata Jarak (km)", "-")
 
 # ================================
 # Visualisasi
